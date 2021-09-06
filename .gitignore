@@ -1,0 +1,13 @@
+# Default build directory for flashing
+build
+
+# Sensitive data
+sdkconfig
+sdkconfig.old
+
+# Internal editor config 
+.vscode
+
+# Hide web post-build
+front\web-demo
+!front\web-demo\dist

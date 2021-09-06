@@ -1,0 +1,123 @@
+menu "WPA2 Enterprise Configuration"
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "NTUSECURE"
+        help
+            SSID (network name) for the example to connect to.
+
+    config VALIDATE_SERVER_CERT
+        bool "Validate server"
+        default n
+        help
+            Validate the servers' certificate using CA cert.
+
+    choice
+        prompt "EAP method for the example to use"
+        default EAP_METHOD_PEAP
+        config EAP_METHOD_TLS
+            bool "TLS"
+        config EAP_METHOD_PEAP
+            bool "PEAP"
+        config EAP_METHOD_TTLS
+            bool "TTLS"
+    endchoice
+
+    config EAP_METHOD
+        int
+        default 0 if EAP_METHOD_TLS
+        default 1 if EAP_METHOD_PEAP
+        default 2 if EAP_METHOD_TTLS
+
+    choice
+        prompt "Phase2 method for TTLS"
+        depends on EAP_METHOD_TTLS
+        default EAP_METHOD_TTLS_PHASE2_MSCHAPV2
+        config EAP_METHOD_TTLS_PHASE2_MSCHAPV2
+            bool "MSCHAPV2"
+        config EAP_METHOD_TTLS_PHASE2_MSCHAP
+            bool "MSCHAP"
+        config EAP_METHOD_TTLS_PHASE2_PAP
+            bool "PAP"
+        config EAP_METHOD_TTLS_PHASE2_CHAP
+            bool "CHAP"
+    endchoice
+
+    config EAP_METHOD_TTLS_PHASE_2
+        int
+        default 1 if EAP_METHOD_TTLS_PHASE2_MSCHAPV2
+        default 2 if EAP_METHOD_TTLS_PHASE2_MSCHAP
+        default 3 if EAP_METHOD_TTLS_PHASE2_PAP
+        default 4 if EAP_METHOD_TTLS_PHASE2_CHAP
+
+    config EAP_ID
+        string "EAP ID"
+        default ""
+        help
+            Identity in phase 1 of EAP procedure.
+
+    config EAP_USERNAME
+        string "EAP USERNAME"
+        depends on EAP_METHOD_PEAP || EAP_METHOD_TTLS
+        default ""
+        help
+            Username for EAP method (PEAP and TTLS).
+
+    config EAP_PASSWORD
+        string "EAP PASSWORD"
+        depends on EAP_METHOD_PEAP || EAP_METHOD_TTLS
+        default ""
+        help
+            Password for EAP method (PEAP and TTLS).
+endmenu
+
+menu "Local Server Configuration"
+
+    config MDNS_HOST_NAME
+        string "mDNS Host Name"
+        default "esp-home"
+        help
+            Specify the domain name used in the mDNS service.
+            Note that webpage also take it as a part of URL where it will send GET/POST requests to.
+
+    choice WEB_DEPLOY_MODE
+        prompt "Website deploy mode"
+        default WEB_DEPLOY_SF
+        help
+            Select website deploy mode.
+            You can deploy website to host, and ESP32 will retrieve them in a semihost way (JTAG is needed).
+            You can deploy website to SD card or SPI flash, and ESP32 will retrieve them via SDIO/SPI interface.
+            Detailed operation steps are listed in the example README file.
+        config WEB_DEPLOY_SEMIHOST
+            bool "Deploy website to host (JTAG is needed)"
+            help
+                Deploy website to host.
+                It is recommended to choose this mode during developing.
+        config WEB_DEPLOY_SD
+            depends on IDF_TARGET_ESP32
+            bool "Deploy website to SD card"
+            help
+                Deploy website to SD card.
+                Choose this production mode if the size of website is too large (bigger than 2MB).
+        config WEB_DEPLOY_SF
+            bool "Deploy website to SPI Nor Flash"
+            help
+                Deploy website to SPI Nor Flash.
+                Choose this production mode if the size of website is small (less than 2MB).
+    endchoice
+
+    if WEB_DEPLOY_SEMIHOST
+        config HOST_PATH_TO_MOUNT
+            string "Host path to mount (e.g. absolute path to web dist directory)"
+            default "PATH-TO-WEB-DIST_DIR"
+            help
+                When using semihost in ESP32, you should specify the host path which will be mounted to VFS.
+                Note that only absolute path is acceptable.
+    endif
+
+    config WEB_MOUNT_POINT
+        string "Website mount point in VFS"
+        default "/www"
+        help
+            Specify the mount point in VFS.
+
+endmenu
